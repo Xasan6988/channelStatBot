@@ -6,7 +6,7 @@ const {createStore, applyMiddleware} = require('redux');
 const {default: thunk} = require('redux-thunk');
 
 const rootReducer = require('./redux/rootReducer');
-const {addHokkeyMatch, fetchMatches, getWinrate, fetchMatchesForDate} = require('./redux/actions');
+const {addHokkeyMatch, hokkey2timeFetchMatches, hokkey2timeGetWinrate, hokkey2timeFetchMatchesForDate, addFootbalSRMatch} = require('./redux/actions');
 
 const menu_keyboard = require('./keyboards/menu_keyboards');
 
@@ -22,6 +22,7 @@ const bot = new Telegraf(config.get('TOKEN'));
 bot.use(async (ctx, next) => {
   if (ctx.update.edited_channel_post?.sender_chat.id === config.get('channel') && ctx.update.edited_channel_post.photo && ctx.update.edited_channel_post.caption.split('//')[0].trim() === 'fix') {
     const data = ctx.update.edited_channel_post.caption.split('//');
+    const date = `${new Date().getDate()}.${(new Date().getMonth() + 1) < 10 ? "0" + (new Date().getMonth() + 1) : new Date().getMonth() + 1}`;
 
     if (data[1].trim() === '#hokkey2time') {
       if (data.length < 4) {
@@ -37,12 +38,27 @@ bot.use(async (ctx, next) => {
       } else {
         coef = JSON.parse(data[4]);
       }
-      const date = `${new Date().getDate()}.${(new Date().getMonth() + 1) < 10 ? "0" + (new Date().getMonth() + 1) : new Date().getMonth() + 1}`
 
       try {
         store.dispatch(addHokkeyMatch({date, ...bets, coef}));
       } catch (e) {
         console.log(`An error occurred while trying save match ${e.message}`);
+      }
+    } else if (data[1].trim() === '#footballSR') {
+      if (data.length === 6) {
+        const match = {
+          date,
+          win: JSON.parse(data[2]),
+          half: JSON.parse(data[3]),
+          winCoef: JSON.parse(data[4]),
+          halfCoef: JSON.parse(data[5])
+        }
+
+        try {
+          store.dispatch(addFootbalSRMatch(match));
+        } catch (e) {
+          console.log(`An error occurred while trying save match ${e.message}`);
+        }
       }
     }
   }
@@ -51,11 +67,8 @@ bot.use(async (ctx, next) => {
 
 bot.start(async ctx => {
   if (checkUserinArr(ctx.from.id, config.get('admins'))) {
-    const winrate = store.getState().winrate;
     ctx.replyWithHTML(`
 Silence is gold
-Winrate is - ${(winrate.half).toFixed(2)}%
-For 2 goals - ${(winrate.one).toFixed(2)}%
     `, menu_keyboard());
   } else {
     ctx.reply('This bot is private. Please go away');
@@ -64,11 +77,8 @@ For 2 goals - ${(winrate.one).toFixed(2)}%
 
 bot.action('menu', async ctx => {
   if (checkUserinArr(ctx.from.id, config.get('admins'))) {
-    const winrate = store.getState().winrate;
     ctx.editMessageText(`
 Silence is gold
-Winrate is - ${(winrate.half).toFixed(2)}%
-For 2 goals - ${(winrate.one).toFixed(2)}%
     `, {
       parse_mode: 'HTML', ...menu_keyboard()
     });
@@ -77,17 +87,62 @@ For 2 goals - ${(winrate.one).toFixed(2)}%
   }
 });
 
-bot.action('yesterday', async ctx => {
-  await store.dispatch(fetchMatchesForDate(new Date().getDate() - 1));
+bot.action('hokkey2time', async ctx => {
+  await store.dispatch(hokkey2timeGetWinrate());
 
-  setImmediate(() => {
-    store.dispatch(getWinrate())
-  })
-
-  const {matches, halfCount, oneCount, minusCount, nonBet} = getStatInfo(store.getState().hokkeyMatches)
-
+  const winrate = store.getState().hokkey2timeWinrate;
 
   ctx.editMessageText(`
+Winrate is ${winrate.half.toFixed(2)}%
+For 2 goals - ${winrate.one.toFixed(2)}%
+  `, {
+    parse_mode: "HTML",
+    ...Markup.inlineKeyboard([
+      Markup.button.callback(`За вчера`, `yesterday:#hokkey2time`),
+      Markup.button.callback('Вся стата', 'allStat:#hokkey2time'),
+      Markup.button.callback('Назад в меню', 'menu')
+    ])
+  })
+});
+
+
+
+bot.on('callback_query', async ctx => {
+  if (ctx.update.callback_query.data.split(':')[0] === 'yesterday') {
+    const strategy = ctx.update.callback_query.data.split(':')[1].trim();
+
+    if (strategy === '#hokkey2time') {
+      await store.dispatch(hokkey2timeFetchMatchesForDate(new Date().getDate() - 1));
+
+      const {matches, halfCount, oneCount, minusCount, nonBet} = getStatInfo(store.getState().hokkeyMatches)
+
+
+      ctx.editMessageText(`
+Матчей всего: ${matches.length}
+
+Плюсов по ТБ 0.5: ${halfCount}
+
+Матчей с недошедшим кф на ТБ 0.5: ${nonBet}
+
+Плюсов по ТБ 1: ${oneCount}
+
+Минусов: ${minusCount};
+      `,
+        {
+          parse_mode: 'HTML',
+          ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'hokkey2time')])
+        });
+    }
+  } if (ctx.update.callback_query.data.split(':')[0] === 'allStat') {
+    const strategy = ctx.update.callback_query.data.split(':')[1].trim();
+
+    if (strategy === '#hokkey2time') {
+      await store.dispatch(hokkey2timeFetchMatches());
+
+      const {matches, halfCount, oneCount, minusCount, nonBet} = getStatInfo(store.getState().hokkeyMatches)
+
+
+      ctx.editMessageText(`
 Матчей всего: ${matches.length}
 
 Плюсов по ТБ 0.5: ${halfCount}
@@ -98,14 +153,18 @@ bot.action('yesterday', async ctx => {
 
 Минусов: ${minusCount};
   `,
-    {
-      parse_mode: 'HTML',
-      ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'menu')])
-    });
+      {
+        parse_mode: 'HTML',
+        ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'hokkey2time')])
+      });
+    }
+  }
 });
 
+
+
 bot.action('allStat', async ctx => {
-  await store.dispatch(fetchMatches());
+  await store.dispatch(hokkey2timeFetchMatches());
   setImmediate(() => {
     store.dispatch(getWinrate())
   })
@@ -136,7 +195,6 @@ bot.action('allStat', async ctx => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }));
-    store.dispatch(getWinrate());
     bot.launch();
     console.log('Bot has been started...');
   } catch (e) {

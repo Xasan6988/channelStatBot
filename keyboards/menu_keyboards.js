@@ -2,8 +2,8 @@ const {Markup} = require('telegraf');
 
 const menu_keyboard = () => {
   return Markup.inlineKeyboard([
-    Markup.button.callback('Стата за вчера', 'yesterday'),
-    Markup.button.callback('Вся стата', 'allStat'),
+    Markup.button.callback('#hokkey2time', 'hokkey2time'),
+    Markup.button.callback('#footballSR', 'footballSR'),
   ], {wrap: (btn, index, currentRow) => currentRow.length >= index / (currentRow.length - 2)});
 };
 

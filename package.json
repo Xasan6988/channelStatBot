@@ -4,8 +4,8 @@
   "description": "",
   "main": "bot.js",
   "scripts": {
-    "dev": "nodemon bot",
-    "start": "pm2 start bot"
+    "dev": "nodemon statBot",
+    "start": "pm2 start statBot"
   },
   "keywords": [],
   "author": "",
