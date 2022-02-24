@@ -6,11 +6,11 @@ const {createStore, applyMiddleware} = require('redux');
 const {default: thunk} = require('redux-thunk');
 
 const rootReducer = require('./redux/rootReducer');
-const {addHokkeyMatch, hokkey2timeFetchMatches, hokkey2timeGetWinrate, hokkey2timeFetchMatchesForDate, addFootbalSRMatch} = require('./redux/actions');
+const {addHokkeyMatch, hokkey2timeFetchMatches, hokkey2timeGetWinrate, hokkey2timeFetchMatchesForDate, addFootbalSRMatch, footballSRFetchMatches, footballSRGetWinrate, footballSRFetchMatchesForDate} = require('./redux/actions');
 
 const menu_keyboard = require('./keyboards/menu_keyboards');
 
-const {checkUserinArr, getStatInfo} = require('./helpers');
+const {checkUserinArr, getHokkey2TimeStatInfo, getFootballSRStatInfi} = require('./helpers');
 
 const store = createStore(
   rootReducer,
@@ -101,11 +101,27 @@ For 2 goals - ${winrate.one.toFixed(2)}%
       Markup.button.callback(`За вчера`, `yesterday:#hokkey2time`),
       Markup.button.callback('Вся стата', 'allStat:#hokkey2time'),
       Markup.button.callback('Назад в меню', 'menu')
-    ])
+    ], {wrap: (btn, index, currentRow) => currentRow.length >= index / (currentRow.length - 2)})
   })
 });
 
+bot.action('footballSR', async ctx => {
+  await store.dispatch(footballSRGetWinrate());
 
+  const winrate = store.getState().footballSRWinrate;
+
+  ctx.editMessageText(`
+Winrate for WIN: ${winrate.win.toFixed(2)}
+Winrate for HALF: ${winrate.half.toFixed(2)}
+  `, {
+    parse_mode: "HTML",
+    ...Markup.inlineKeyboard([
+      Markup.button.callback(`За вчера`, `yesterday:#footballSR`),
+      Markup.button.callback('Вся стата', 'allStat:#footballSR'),
+      Markup.button.callback('Назад в меню', 'menu')
+    ], {wrap: (btn, index, currentRow) => currentRow.length >= index / (currentRow.length - 2)})
+  })
+})
 
 bot.on('callback_query', async ctx => {
   if (ctx.update.callback_query.data.split(':')[0] === 'yesterday') {
@@ -114,7 +130,7 @@ bot.on('callback_query', async ctx => {
     if (strategy === '#hokkey2time') {
       await store.dispatch(hokkey2timeFetchMatchesForDate(new Date().getDate() - 1));
 
-      const {matches, halfCount, oneCount, minusCount, nonBet} = getStatInfo(store.getState().hokkeyMatches)
+      const {matches, halfCount, oneCount, minusCount, nonBet} = getHokkey2TimeStatInfo(store.getState().hokkeyMatches)
 
 
       ctx.editMessageText(`
@@ -133,13 +149,33 @@ bot.on('callback_query', async ctx => {
           ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'hokkey2time')])
         });
     }
+    if (strategy === '#footballSR') {
+      await store.dispatch(footballSRFetchMatchesForDate(new Date().getDate() - 1));
+
+      const {matches, winPlusCount, halfPlusCount, winMinusCount, halfMinusCount} = getFootballSRStatInfi(store.getState().footballSRMatches)
+
+
+      ctx.editMessageText(`
+Матчей всего: ${matches.length}
+
+Плюсов по ПОБЕДЕ: ${winPlusCount}
+Минусов по ПОБЕДЕ: ${winMinusCount}
+
+Плюсов по ИТБ: ${halfPlusCount}
+Минусов по ИТБ: ${halfMinusCount}
+      `,
+        {
+          parse_mode: 'HTML',
+          ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'hokkey2time')])
+        });
+    }
   } if (ctx.update.callback_query.data.split(':')[0] === 'allStat') {
     const strategy = ctx.update.callback_query.data.split(':')[1].trim();
 
     if (strategy === '#hokkey2time') {
       await store.dispatch(hokkey2timeFetchMatches());
 
-      const {matches, halfCount, oneCount, minusCount, nonBet} = getStatInfo(store.getState().hokkeyMatches)
+      const {matches, halfCount, oneCount, minusCount, nonBet} = getHokkey2TimeStatInfo(store.getState().hokkeyMatches)
 
 
       ctx.editMessageText(`
@@ -157,6 +193,26 @@ bot.on('callback_query', async ctx => {
         parse_mode: 'HTML',
         ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'hokkey2time')])
       });
+    }
+    if (strategy === '#footballSR') {
+      await store.dispatch(footballSRFetchMatches());
+
+      const {matches, winPlusCount, halfPlusCount, winMinusCount, halfMinusCount} = getFootballSRStatInfi(store.getState().footballSRMatches)
+
+
+      ctx.editMessageText(`
+Матчей всего: ${matches.length}
+
+Плюсов по ПОБЕДЕ: ${winPlusCount}
+Минусов по ПОБЕДЕ: ${winMinusCount}
+
+Плюсов по ИТБ: ${halfPlusCount}
+Минусов по ИТБ: ${halfMinusCount}
+      `,
+        {
+          parse_mode: 'HTML',
+          ...Markup.inlineKeyboard([Markup.button.callback('Назад', 'footballSR')])
+        });
     }
   }
 });

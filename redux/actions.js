@@ -139,7 +139,7 @@ const footballSRGetWinrate = () => {
         half: (halfPlus / matches.length) * 100
       }
 
-      dispatch({type: HOKKEY2TIME_GET_WINRATE, payload: WR});
+      dispatch({type: FOOTBALLSR_GET_WINRATE, payload: WR});
     } catch (e) {
       throw e
     }

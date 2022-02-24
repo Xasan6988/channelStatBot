@@ -9,7 +9,9 @@ const {
 
 const initializeState = {
   hokkeyMatches: [],
-  hokkey2timeWinrate: {}
+  hokkey2timeWinrate: {},
+  footballSRMatches: [],
+  footballSRWinrate: {}
 };
 
 const rootReducer = (state = initializeState, action) => {
@@ -21,6 +23,12 @@ const rootReducer = (state = initializeState, action) => {
     return {...state, hokkey2timeWinrate: action.payload};
   } else if (action.type === HOKKEY2TIME_FETCH_MATCHES_FOR_DATE) {
     return {...state, hokkeyMatches: [...action.payload]};
+  } else if (action.type === FOOTBALLSR_FETCH_MATCHES) {
+    return {...state, footballSRMatches: [...action.payload]};
+  } else if (action.type === FOOTBALLSR_FETCH_MATCHES_FOR_DATE) {
+    return {...state, footballSRMatches: [...action.payload]};
+  } else if (action.type === FOOTBALLSR_GET_WINRATE) {
+    return {...state, footballSRWinrate: action.payload};
   }
   return state;
 };

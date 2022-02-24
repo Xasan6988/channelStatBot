@@ -4,7 +4,7 @@ module.exports = {
       return true
     } else return false;
   },
-  getStatInfo(arr) {
+  getHokkey2TimeStatInfo(arr) {
     const matches = arr;
 
     const halfCount = matches.filter(match => match.half && match.coef[0] >= 1.5).length;
@@ -17,6 +17,21 @@ module.exports = {
 
     return {
       halfCount, oneCount, minusCount, matches, nonBet
+    }
+  },
+  getFootballSRStatInfi(arr) {
+    const matches = arr;
+
+    const winPlusCount = matches.filter(match => match.win).length;
+
+    const halfPlusCount = matches.filter(match => match.half && match.halfCoef >= 1.5).length;
+
+    const winMinusCount = matches.filter(match => !match.win).length;
+
+    const halfMinusCount = matches.filter(match => !match.half).length;
+
+    return {
+      winPlusCount, halfPlusCount, winMinusCount, halfMinusCount, matches
     }
   }
 };
