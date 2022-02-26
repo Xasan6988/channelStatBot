@@ -5,13 +5,18 @@ const {
   FOOTBALLSR_FETCH_MATCHES,
   FOOTBALLSR_FETCH_MATCHES_FOR_DATE,
   FOOTBALLSR_GET_WINRATE,
-  ADD_MATCH } = require('./types');
+  ADD_MATCH,
+  BASKET23_FETCH_MATCHES,
+  BASKET23_GET_WINRATE,
+  BASKET23_FETCH_MATCHES_FOR_DATE} = require('./types');
 
 const initializeState = {
   hokkeyMatches: [],
   hokkey2timeWinrate: {},
   footballSRMatches: [],
-  footballSRWinrate: {}
+  footballSRWinrate: {},
+  basket23Matches: [],
+  basket23Winrate: {}
 };
 
 const rootReducer = (state = initializeState, action) => {
@@ -29,6 +34,12 @@ const rootReducer = (state = initializeState, action) => {
     return {...state, footballSRMatches: [...action.payload]};
   } else if (action.type === FOOTBALLSR_GET_WINRATE) {
     return {...state, footballSRWinrate: action.payload};
+  } else if (action.type === BASKET23_FETCH_MATCHES) {
+    return {...state, basket23Matches: [...action.payload]};
+  } else if (action.type === BASKET23_FETCH_MATCHES_FOR_DATE) {
+    return {...state, basket23Matches: [...action.payload]};
+  } else if (action.type === BASKET23_GET_WINRATE) {
+    return {...state, basket23Winrate: action.payload}
   }
   return state;
 };

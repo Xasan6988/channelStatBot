@@ -19,7 +19,7 @@ module.exports = {
       halfCount, oneCount, minusCount, matches, nonBet
     }
   },
-  getFootballSRStatInfi(arr) {
+  getFootballSRStatInfo(arr) {
     const matches = arr;
 
     const winPlusCount = matches.filter(match => match.win).length;
@@ -33,5 +33,14 @@ module.exports = {
     return {
       winPlusCount, halfPlusCount, winMinusCount, halfMinusCount, matches
     }
+  },
+  getBasket23StatInfo(arr) {
+    const matches = arr;
+
+    const itbPlusCount = matches.filter(match => match.itb && match.coef >= 1.35).length;
+
+    const itbMinusCount = matches.filter(match => !match.itb).length;
+
+    return {itbPlusCount, itbMinusCount, matches}
   }
 };
