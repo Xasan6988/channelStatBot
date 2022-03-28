@@ -11,14 +11,14 @@ const {
   BASKET23_GET_WINRATE
 } = require('./types');
 
-const HokkeyMatch = require('../models/HokkeyMatch');
-const FootbalSRMatch = require('../models/FootbalSRMatch');
+const Hokkey2timeMatch = require('../models/Hokkey2timeMatch');
+const FootballSRMatch = require('../models/FootballSRMatch');
 const Basket23Match = require('../models/Basket23Match');
 
 const addHokkeyMatch = (match) => {
   return async dispatch => {
     try {
-      const newMatch = await new HokkeyMatch(match);
+      const newMatch = await new Hokkey2timeMatch(match);
 
       await newMatch.save();
 
@@ -32,7 +32,7 @@ const addHokkeyMatch = (match) => {
 const addFootbalSRMatch = (match) => {
   return async dispatch => {
     try {
-      const newMatch = await new FootbalSRMatch(match);
+      const newMatch = await new FootballSRMatch(match);
 
       await newMatch.save();
 
@@ -60,7 +60,7 @@ const addBasket23Match = (match) => {
 const hokkey2timeFetchMatches = () => {
   return async dispatch => {
     try {
-      const matches = await HokkeyMatch.find();
+      const matches = await Hokkey2timeMatch.find();
 
       dispatch({type: HOKKEY2TIME_FETCH_MATCHES, payload: matches});
     } catch (e) {
@@ -72,7 +72,7 @@ const hokkey2timeFetchMatches = () => {
 const footballSRFetchMatches = () => {
   return async dispatch => {
     try {
-      const matches = await FootbalSRMatch.find();
+      const matches = await FootballSRMatch.find();
 
       dispatch({type: FOOTBALLSR_FETCH_MATCHES, payload: matches});
     } catch (e) {
@@ -104,7 +104,7 @@ const hokkey2timeFetchMatchesForDate = (date) => {
   return async dispatch => {
     try {
 
-      const matches = await HokkeyMatch.find({date: dateForQuery});
+      const matches = await Hokkey2timeMatch.find({date: dateForQuery});
 
       dispatch({type: HOKKEY2TIME_FETCH_MATCHES_FOR_DATE, payload: matches});
     } catch (e) {
@@ -124,7 +124,7 @@ const footballSRFetchMatchesForDate = (date) => {
   return async dispatch => {
     try {
 
-      const matches = await FootbalSRMatch.find({date: dateForQuery});
+      const matches = await FootballSRMatch.find({date: dateForQuery});
 
       dispatch({type: FOOTBALLSR_FETCH_MATCHES_FOR_DATE, payload: matches});
     } catch (e) {
@@ -156,7 +156,7 @@ const basket23FetchMatchesForDate = (date) => {
 const hokkey2timeGetWinrate = () => {
   return async dispatch => {
     try {
-      const matches = await HokkeyMatch.find();
+      const matches = await Hokkey2timeMatch.find();
 
       const matchesWithHalfCoef = matches.filter(match =>  match.coef[0] >= 1.5).length;
       const matchesWithOneCoef = matches.filter(match =>  match.coef[1] >= 1.5).length;
@@ -179,7 +179,7 @@ const hokkey2timeGetWinrate = () => {
 const footballSRGetWinrate = () => {
   return async dispatch => {
     try {
-      const matches = await FootbalSRMatch.find();
+      const matches = await FootballSRMatch.find();
 
       const winPlus = matches.filter(match => match.win).length;
       const halfPlus = matches.filter(match => match.half).length;

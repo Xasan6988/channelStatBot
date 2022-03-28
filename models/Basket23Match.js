@@ -7,4 +7,4 @@ const schema = new Schema({
 });
 
 
-module.exports = model('Basket23', schema);
+module.exports = model('Basket23Match', schema);
